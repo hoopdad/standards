@@ -102,9 +102,12 @@ sign_in_audience: "AzureADandPersonalMicrosoftAccount"  # or dedicated CIAM tena
 spa:
   redirect_uris:
     - "https://<production-url>"
-    - "http://localhost:<dev-port>"
+    - "http://localhost:<dev-port>"   # REMOVE from production registration
 supported_account_types: "External"  # if using CIAM tenant
 ```
+
+> ⚠️ Remove `http://localhost:*` redirect URIs from production app registrations.
+> Localhost URIs allow local attackers to intercept tokens.
 
 ### API App Registration
 
@@ -170,7 +173,7 @@ export const msalConfig: Configuration = {
     clientId: "<web-app-client-id>",
     authority: "https://login.microsoftonline.com/<tenant-id>",
     // For CIAM tenant: "https://<tenant-name>.ciamlogin.com/<tenant-id>"
-    redirectUri: window.location.origin,
+    redirectUri: "https://<production-url>",  // SECURITY: always hardcode, never use window.location.origin
     navigateToLoginRequestUrl: false,
   },
   cache: {
@@ -179,6 +182,10 @@ export const msalConfig: Configuration = {
   },
 };
 ```
+
+> ⚠️ **Security note:** Never use `window.location.origin` as `redirectUri` in production.
+> A subdomain takeover or CDN misconfiguration could redirect tokens to an attacker.
+> Use environment-specific config with hardcoded origins.
 
 ### Theme Toggle Pattern
 
@@ -208,6 +215,8 @@ POST /api/profile       → 201 (created) | 409 (already exists)
 - Use `sub` claim from JWT as unique user identifier (not email — emails can change)
 - Upsert-safe: handle race conditions from multiple tabs
 - Validate token `aud` claim matches your API app registration
+- Validate `scp` (scope) claim contains `access_as_user` — reject tokens minted for other purposes
+- Validate `nbf` (not-before) claim — reject pre-dated tokens
 
 ### Version Endpoint
 

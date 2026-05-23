@@ -10,7 +10,7 @@ security:
   authentication:
     - "All user-facing endpoints require Entra External ID (CIAM) authentication"
     - "Use MSAL.js (@azure/msal-browser) in the SPA; validate JWT tokens server-side"
-    - "Token validation must check issuer, audience, and expiry on every API request"
+    - "Token validation must check issuer, audience, expiry, not-before (nbf), and scopes on every API request"
     - "Use managed identities for all service-to-service communication — no secrets in code"
     - "API must reject requests with missing, expired, or malformed tokens with 401"
 
@@ -34,7 +34,7 @@ security:
     - "Run Bandit on all Python code (severity medium+, confidence medium+)"
     - "Run Checkov on all Terraform code (quiet mode, terraform framework)"
     - "Run ESLint with eslint-plugin-security on all TypeScript/JavaScript"
-    - "Scan Docker images with Trivy before push — fail on CRITICAL severity"
+    - "Scan Docker images with Trivy before push — fail on HIGH and CRITICAL severity"
     - "Dependabot enabled on all repos for security updates"
 
   owasp:
@@ -61,12 +61,12 @@ networking:
 cost:
   general:
     - "Prefer consumption/serverless pricing: Cosmos DB serverless, ACA consumption plan"
-    - "Use Basic SKU for ACR (upgrade to Premium only when private endpoints needed)"
+    - "Use Basic SKU for ACR in dev (upgrade to Premium when private endpoints or content trust needed)"
     - "Use Standard SKU for Key Vault"
     - "Right-size Container App resources: start with 0.25 vCPU / 0.5 Gi memory"
     - "Enable scale-to-zero on all Container Apps (min replicas: 0 for non-prod)"
     - "No continuous backups on Cosmos unless explicitly required (periodic is default)"
-    - "Purge protection disabled in dev (soft delete 7 days) for easy cleanup"
+    - "Purge protection disabled in dev only (soft delete 7 days) — never disable on vaults with production or shared secrets"
 
   dev_environments:
     - "Use free tiers wherever available for dev/test"
@@ -81,6 +81,7 @@ cost:
 devops:
   ci:
     - "All CI runs on self-hosted GitHub Actions runners — never GitHub-hosted"
+    - "Self-hosted runners must be ephemeral (fresh VM/container per job) to prevent cross-job credential leakage"
     - "CI triggers on push to main and all pull requests"
     - "CI must pass before CD can execute (workflow_run dependency)"
     - "CI jobs: lint, security scan, unit tests (all must pass)"
