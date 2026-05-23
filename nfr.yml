@@ -1,8 +1,9 @@
 # Non-Functional Requirements for azure-fullstack pattern
-# Referenced by: https://github.com/hoopdad/lean-agent-framework/blob/main/patterns/azure-fullstack/nfr.yml
+# Canonical source: https://github.com/hoopdad/standards/blob/main/nfr.yml
 #
 # These NFRs apply to all projects using the azure-fullstack pattern.
 # Override or extend in your project's init.yml if needed.
+# See also: external-user-pattern.md for detailed Entra External ID auth architecture.
 
 ---
 security:
@@ -181,9 +182,12 @@ architecture:
     - "Ingress configured per service: external for web, internal for API/agent"
 
   identity:
-    - "Entra External ID (CIAM) for end-user authentication"
+    - "Entra External ID (CIAM) for end-user authentication — see external-user-pattern.md"
     - "SPA registered as public client with redirect URIs"
     - "API registered with custom scope for delegated access"
+    - "Self-service signup via Entra-hosted user flows (no custom email collection)"
+    - "MSAL.js with PKCE auth flow; tokens in sessionStorage (not localStorage)"
+    - "Profile creation on first authenticated visit (sub claim as user ID, not email)"
     - "OIDC federation for GitHub Actions → Azure (no stored secrets)"
     - "User-assigned managed identity for Container Apps"
 
